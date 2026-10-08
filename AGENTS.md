@@ -4,24 +4,24 @@ Guidance for AI agents and contributors working on VisFeats, a library for extra
 
 ## Project layout
 
-- `src/visfeats/` - library code, one module per feature family (`simple.py`, `fourier.py`, `spectral.py`, `phog.py`, `memorability.py`). Shared helpers live in `_utils.py`.
-- `src/visfeats/__init__.py` - public API, including `extract_all_features`.
+- `src/visfeats/` - library code organized by feature family: `chromatic.py`, `fourier.py`, `memorability.py`, `misc.py`, `phog.py`, and `spectral.py`. Shared array conversion helpers live in `_utils.py`.
+- `src/visfeats/__init__.py` - package-level public API, including `extract_all_features`.
 - `tests/` - pytest suite; `tests/conftest.py` provides shared fixtures.
-- `pyproject.toml` - packaging (setuptools, `src` layout) and dependencies. Install with `pip install -e ".[dev]"`. `resmem` (and its PyTorch dependency) is optional: it lives in the `memorability` extra and is imported lazily, so core features must work without it.
+- `pyproject.toml` - packaging (setuptools, `src` layout), runtime dependencies, and optional extras. Install development dependencies with `pip install -e ".[dev]"`. `resmem` (and its PyTorch dependency) is optional: it is imported lazily by `memorability_resmem` and is available through the `resmem` extra.
 
 ## Core conventions
 
 ### Input type: Pillow images
 
-- Public feature functions take a `PIL.Image.Image` as their input, not a NumPy array. (Update type hints and docstrings that still say "image array".)
-- Exceptions are allowed only when a function is inherently array-based (for example a helper operating on an intermediate spectrum). Keep those private (underscore-prefixed) or in `_utils.py`.
+- Image-based feature functions take a `PIL.Image.Image` as input, not a NumPy array. The array-based `spectral_features` function is an exception.
+- Keep other array-based helpers private (underscore-prefixed) or in `_utils.py`.
 - Return plain Python types (`float`, or a dictionary mapping strings to floats), not NumPy scalars, so results are serializable.
-- A function that computes a single value returns a `float`. Return a dictionary only when several related values are computed together (for example `mean_hsv` returning hue, saturation, and value).
+- A function that computes a single value returns a `float`. Return a dictionary only when several related values are computed together (for example `hsv_features` returning HSV means and entropies).
 
-### Color mode: convert inside each function
+### Image color-mode handling
 
-- Never assume the caller's mode. Pillow images may be `1`, `L`, `P`, `RGB`, `RGBA`, and so on.
-- Every function converts to the mode it needs as its first step, then converts to an array:
+- Never assume the caller's Pillow mode. Images may be `1`, `L`, `P`, `RGB`, `RGBA`, and so on.
+- Each image-based feature converts to the mode it needs before converting to an array:
   - color features (HSV, etc.): `image.convert("RGB")`
   - grayscale features (contrast, Fourier, PHOG, etc.): `image.convert("L")`
 - Do this per function rather than relying on upstream conversion, so each function works standalone.
@@ -48,21 +48,23 @@ Guidance for AI agents and contributors working on VisFeats, a library for extra
 - Every feature function needs at least a smoke test: it runs on every example image without raising and returns the expected structure (keys, finite float values). Prefer `pytest.mark.parametrize` or a loop over the fixture.
 - Do not commit test images; the fixture builds Pillow images in memory from scikit-image's bundled `skimage.data`. Tests should not need network access.
 - For deterministic features, add a small targeted test (for example a uniform image gives zero contrast) in addition to the smoke test.
-- Test code must also follow the Python 3.6 compatibility rules above.
+- Test code must run on every Python version supported by the project (currently Python 3.10-3.14 in CI).
 - Do not weaken or remove tests to make a change pass.
 
 ## Code style
 
 - Formatting is enforced by `ruff format` through pre-commit. Set it up once with `pip install pre-commit; pre-commit install`, and run `pre-commit run --all-files` before pushing.
-- Use type hints on public functions and NumPy-style docstrings (`Parameters`, `Returns`, and `References` when applicable). Start with a one-line summary, then briefly describe how the value is computed (color conversion, library function, aggregation). In `Returns`, document the dictionary keys when a dictionary is returned.
-- Multi-value feature functions return a flat dictionary mapping strings to floats, with stable, descriptive key names. `extract_all_features` builds the final flat dictionary, naming single-value features itself (for example `{"rms": rms(image)}`), so keys merge without collisions.
+- Use type hints on public functions and NumPy-style docstrings (`Parameters`, `Returns`, and `References` when applicable). Start with a one-line summary, then briefly describe how the value is computed (color conversion, library function, aggregation). In `Returns`, document dictionary keys in a table. Private helpers may use concise docstrings without full numpydoc sections.
+- In `Parameters`, document defaults after the type as `name : type, default=value` (for example, `bins : int, default=100`); do not repeat the default in the description.
+- Put multi-step processing details in a NumPy-style `Notes` section rather than before `Parameters`.
+- Multi-value feature functions return a flat dictionary mapping strings to floats, with stable, descriptive key names.
 
 ## Adding a new feature
 
 1. Add a function in the appropriate module (or a new one) taking `image: Image.Image`.
 2. Convert to the required color mode at the top of the function.
 3. Implement with `skimage`/`scipy` where possible.
-4. Export it in `src/visfeats/__init__.py` and include it in `extract_all_features`.
+4. Export it from `src/visfeats/__init__.py` if it is intended to be part of the package-level public API.
 5. Add a smoke test over `skimage_images`, then run `python -m pytest` and `pre-commit run --all-files`.
 6. Document the feature, with its reference, in `README.md`.
 

@@ -29,6 +29,19 @@ image = Image.open("path/to/your/image.jpg")
 
 All functions in VisFeats take a PIL ``Image.Image`` as input and return the corresponding feature values. Available features are described below.
 
+### Extract multiple features
+
+Use `extract_all_features` to collect all package-level features, or pass a
+feature name or list of names to select a subset. The result is a flat
+dictionary. If `resmem` is not installed, its memorability feature is skipped
+with a warning.
+
+```python
+from visfeats import extract_all_features
+
+features = extract_all_features(image, features=["rms", "hsv_features"])
+```
+
 ### Mean and entropy of HSV channels
 
 Chromatic features include the mean and entropy of the HSV channels. The `hsv_features` function returns a dictionary with six keys: `hue_mean`, `saturation_mean`, `value_mean`, `hue_entropy`, `saturation_entropy`, and `value_entropy`.
