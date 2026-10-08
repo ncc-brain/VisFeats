@@ -7,7 +7,7 @@ Guidance for AI agents and contributors working on VisFeats, a library for extra
 - `src/visfeats/` - library code, one module per feature family (`simple.py`, `fourier.py`, `spectral.py`, `phog.py`, `memorability.py`). Shared helpers live in `_utils.py`.
 - `src/visfeats/__init__.py` - public API, including `extract_all_features`.
 - `tests/` - pytest suite; `tests/conftest.py` provides shared fixtures.
-- `setup.cfg` / `pyproject.toml` - packaging (setuptools, `src` layout) and dependencies. Install with `pip install -e ".[dev]"`. `resmem` (and its PyTorch dependency) is optional: it lives in the `memorability` extra and is imported lazily, so core features must work without it.
+- `pyproject.toml` - packaging (setuptools, `src` layout) and dependencies. Install with `pip install -e ".[dev]"`. `resmem` (and its PyTorch dependency) is optional: it lives in the `memorability` extra and is imported lazily, so core features must work without it.
 
 ## Core conventions
 
@@ -29,15 +29,9 @@ Guidance for AI agents and contributors working on VisFeats, a library for extra
 
 ### Python version compatibility
 
-- `pyproject.toml` declares `requires-python = ">=3.6"`. All library code (`src/`) and tests must stay runnable on Python 3.6; check the declared minimum before using any newer feature.
-- Avoid syntax and stdlib features newer than 3.6, including:
-  - built-in generics in annotations (`list[int]`, `dict[str, float]`, `tuple[int, ...]`); use `typing.List`, `typing.Dict`, `typing.Tuple`
-  - `X | Y` union types; use `typing.Optional` / `typing.Union`
-  - `from __future__ import annotations` (3.7+), the walrus operator `:=` (3.8+), positional-only parameters `/` (3.8+), `match` statements (3.10+)
-  - `dataclasses` (3.7+), `functools.cached_property` (3.8+), `math.prod` (3.8+), `str.removeprefix` (3.9+), `zip(strict=True)` (3.10+)
-- f-strings are fine (3.6). Use `typing` imports rather than newer typing helpers (`Literal`, `Protocol`, `TypedDict` are 3.8+).
-- Keep dependency requirements compatible with the declared minimum; do not add a dependency that drops Python 3.6 without raising `requires-python` deliberately and updating this file.
-- Known violations to fix when touched: `dict[str, float]` in `src/visfeats/__init__.py`, and `list[...]` annotations in `tests/conftest.py`.
+- `pyproject.toml` declares `requires-python = ">=3.10"`, and CI tests 3.10-3.14. All library code (`src/`) and tests must run on every version in that range; do not use features newer than 3.10.
+- Built-in generics (`list[int]`) and `X | Y` unions are fine.
+- Keep dependency requirements compatible with the declared minimum.
 
 ### Keep implementations simple
 

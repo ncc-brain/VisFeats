@@ -1,6 +1,6 @@
 # VisFeats: Extraction of Global Visual Features from Images
 
-![Python Version](https://img.shields.io/badge/python-3.6%2B-blue)
+![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)
 
 VisFeats is a library for extracting global visual features from images.
 
