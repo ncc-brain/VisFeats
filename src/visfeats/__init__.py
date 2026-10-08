@@ -1,4 +1,5 @@
-from .basic import mean_hsv, rms
+from .chromatic import hsv_features
 from .memorability import memorability_resmem
+from .misc import rms
 
-__all__ = ["mean_hsv", "rms", "memorability_resmem"]
+__all__ = ["hsv_features", "rms", "memorability_resmem"]
