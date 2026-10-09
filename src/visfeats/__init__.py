@@ -6,7 +6,7 @@ from typing import Dict, Union
 from PIL import Image
 
 from .chromatic import hsv_features
-from .fourier import fourier_slope_and_sigma
+from .spatial_frequency import spatial_frequency_features
 from .memorability import memorability_resmem
 from .misc import rms
 
@@ -14,14 +14,14 @@ logger = logging.getLogger(__name__)
 
 _FEATURES = {
     "hsv_features": hsv_features,
-    "fourier_slope_and_sigma": fourier_slope_and_sigma,
+    "spatial_frequency_features": spatial_frequency_features,
     "rms": rms,
     "memorability_resmem": memorability_resmem,
 }
 
 __all__ = [
     "extract_all_features",
-    "fourier_slope_and_sigma",
+    "spatial_frequency_features",
     "hsv_features",
     "rms",
     "memorability_resmem",
@@ -41,8 +41,8 @@ def extract_all_features(
     features : str or sequence of str, default="all"
         ``"all"`` selects every package-level feature. A feature name or
         sequence of feature names selects only those features. Available
-        names are ``"hsv_features"``, ``"fourier_slope_and_sigma"``,
-        ``"rms"``, and ``"memorability_resmem"``.
+        names are ``"hsv_features"``, ``"spatial_frequency_features"``,
+                ``"rms"``, and ``"memorability_resmem"``.
 
     Returns
     -------

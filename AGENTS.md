@@ -4,7 +4,7 @@ Guidance for AI agents and contributors working on VisFeats, a library for extra
 
 ## Project layout
 
-- `src/visfeats/` - library code organized by feature family: `chromatic.py`, `fourier.py`, `memorability.py`, `misc.py`, `phog.py`, and `spectral.py`. Shared array conversion helpers live in `_utils.py`.
+- `src/visfeats/` - library code organized by feature family: `chromatic.py`, `spatial_frequency.py`, `memorability.py`, `misc.py`, `phog.py`, and `spectral.py`. Shared array conversion helpers live in `_utils.py`.
 - `src/visfeats/__init__.py` - package-level public API, including `extract_all_features`.
 - `tests/` - pytest suite; `tests/conftest.py` provides shared fixtures.
 - `pyproject.toml` - packaging (setuptools, `src` layout), runtime dependencies, and optional extras. Install development dependencies with `pip install -e ".[dev]"`. `resmem` (and its PyTorch dependency) is optional: it is imported lazily by `memorability_resmem` and is available through the `resmem` extra.

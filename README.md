@@ -1,5 +1,6 @@
 # VisFeats: Extraction of Global Visual Features from Images
 
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 ![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)
 
 VisFeats is a library for extracting global visual features from images.
@@ -49,6 +50,15 @@ Chromatic features include the mean and entropy of the HSV channels. The `hsv_fe
 ```python
 from visfeats import hsv_features
 hsv_features = hsv_features(image)
+```
+
+### Spatial frequency features
+
+The `spatial_frequency_features` function returns a dictionary with five keys: `fourier_slope`, `fourier_sigma`, `dimensionality`, `spectral_centroid`, and `spectral_variance`. Dimensionality is determined by taking the two-dimensional fast Fourier transform of the image, rotationally averaging it over the entire frequency domain, and ranking the spectral components by magnitude. It is the slope of the resulting spectrum (log magnitude versus log rank). Spectral centroid is the center of mass of the power spectrum, i.e. the mean spatial frequency weighted by the power in each frequency band. Spectral variance is the circular variance of the power spectrum over orientation (0 when power is concentrated along one orientation, 1 when it is spread evenly).
+
+```python
+from visfeats import spatial_frequency_features
+spatial_frequency = spatial_frequency_features(image)
 ```
 
 ### Memorability
