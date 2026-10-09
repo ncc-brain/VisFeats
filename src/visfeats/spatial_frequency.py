@@ -199,12 +199,12 @@ def spatial_frequency_features(
     .. [1] Redies, C., Grebenkina, M., Mohseni, M., Kaduhm, A., & Dobel, C. (2020).
        Global Image Properties Predict Ratings of Affective Pictures. Frontiers in Psychology, 11.
        https://doi.org/10.3389/fpsyg.2020.00953
-    .. [2] Redies, C., Hasenstein, J., & Denzler, J. (2008). 
-       Fractal-like image statistics in visual art: Similarity to natural scenes. Spatial Vision, 21(1–2), 137–148. 
+    .. [2] Redies, C., Hasenstein, J., & Denzler, J. (2008).
+       Fractal-like image statistics in visual art: Similarity to natural scenes. Spatial Vision, 21(1–2), 137–148.
        https://doi.org/10.1163/156856807782753921
-    .. [3] Uran, C., Peter, A., Lazar, A., Barnes, W., Klon-Lipok, J., Shapcott, K. A., Roese, R., 
-       Fries, P., Singer, W., & Vinck, M. (2022). 
-       Predictive coding of natural images by V1 firing rates and rhythmic synchronization. Neuron, 110(7), 
+    .. [3] Uran, C., Peter, A., Lazar, A., Barnes, W., Klon-Lipok, J., Shapcott, K. A., Roese, R.,
+       Fries, P., Singer, W., & Vinck, M. (2022).
+       Predictive coding of natural images by V1 firing rates and rhythmic synchronization. Neuron, 110(7),
        1240-1257.e8. https://doi.org/10.1016/j.neuron.2022.01.002
     """
     grayscale = _pad_and_resize_image(image, size=size, pad=pad)
