@@ -11,7 +11,7 @@ def _load_resmem():
     except ImportError as error:
         raise ImportError(
             "memorability_resmem requires the optional dependency `resmem`. "
-            "Install it with: pip install 'visfeats[memorability]'"
+            "Install it with: pip install resmem"
         ) from error
 
     model = ResMem(pretrained=True)
