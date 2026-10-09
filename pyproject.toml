@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=64"]
+requires = ["setuptools>=80", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "visfeats"
-version = "2026.10.07"
+dynamic = ["version"]
 description = "A library for extracting global visual features"
 readme = "README.md"
 authors = [{ name = "Qian Chu", email = "qianchu99@gmail.com" }]
@@ -17,3 +17,6 @@ dev = ["resmem", "pytest", "pre-commit"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools_scm]
+local_scheme = "node-and-date"
