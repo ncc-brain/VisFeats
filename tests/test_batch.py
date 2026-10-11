@@ -36,7 +36,7 @@ def test_extract_all_features_skips_missing_resmem(monkeypatch, caplog):
     assert "rms" in features
     assert "hue_mean" in features
     assert "fourier_slope" in features
-    assert "fourier_sigma" in features
+    assert "fourier_deviation" in features
     assert "dimensionality" in features
     assert "spectral_centroid" in features
     assert "spectral_variance" in features

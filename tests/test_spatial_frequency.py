@@ -20,22 +20,25 @@ def test_spatial_frequency_features_on_scikit_images(
                 image, return_spectrum=True, **kwargs
             )
             assert spectrum.ndim == 2
-            assert spectrum.shape[1] == 2  # (log10 frequency, log10 power)
+            assert spectrum.shape[1] == 2  # (frequency, power)
             assert np.isfinite(spectrum).all()
             assert np.all(np.diff(spectrum[:, 0]) > 0)
+            assert np.all(spectrum[:, 0] >= 10.0)  # default min_frequency
+            assert np.all(spectrum[:, 0] <= kwargs["max_frequency"])
+            assert np.all(spectrum[:, 1] > 0)
         else:
             features = spatial_frequency_features(image, **kwargs)
 
         assert set(features) == {
             "fourier_slope",
-            "fourier_sigma",
+            "fourier_deviation",
             "dimensionality",
             "spectral_centroid",
             "spectral_variance",
         }
         assert all(type(value) is float for value in features.values())
         assert all(math.isfinite(value) for value in features.values())
-        assert features["fourier_sigma"] >= 0.0
+        assert features["fourier_deviation"] >= 0.0
         assert features["dimensionality"] < 0.0
         assert features["spectral_centroid"] > 0.0
         assert 0.0 <= features["spectral_variance"] <= 1.0

@@ -1,6 +1,7 @@
 from typing import Dict, Literal, Tuple, overload
 
 import numpy as np
+from scipy import ndimage
 from numpy.typing import NDArray
 from PIL import Image
 from scipy import fft
@@ -55,37 +56,29 @@ def _centered_power_spectrum(
     return power, fy, fx
 
 
-def _radially_averaged_power_spectrum(
+def _radially_averaged_spectrum(
     grayscale: np.ndarray,
-) -> Tuple[np.ndarray, np.ndarray]:
-    """Return radial spatial frequencies and mean power for a square image."""
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Return mean radial frequency, mean power and mean magnitude per annulus.
+
+    Annuli are 1 cycle/image wide, up to the Nyquist frequency.
+    """
     power, fy, fx = _centered_power_spectrum(grayscale)
+
+    # Radial spatial frequency, in cycles/image
     radius = np.hypot(fx, fy)
+    # Consider only frequencies up to the Nyquist limit (half the image size).
+    valid = radius <= min(grayscale.shape) / 2
 
-    # Annular radial bins: 0-1, 1-2, 2-3 ... cycles/image.
+    radius = radius[valid]
+    power = power[valid]
     radial_index = np.floor(radius).astype(np.intp)
-    max_radius = radial_index.max()
+    index = np.arange(radial_index.max() + 1)
 
-    power_sum = np.bincount(
-        radial_index.ravel(),
-        weights=power.ravel(),
-        minlength=max_radius + 1,
-    )
-    sample_count = np.bincount(
-        radial_index.ravel(),
-        minlength=max_radius + 1,
-    )
+    def annular_mean(values: np.ndarray) -> np.ndarray:
+        return np.asarray(ndimage.mean(values, labels=radial_index, index=index))
 
-    radial_power = np.divide(
-        power_sum,
-        sample_count,
-        out=np.zeros_like(power_sum, dtype=np.float64),
-        where=sample_count > 0,
-    )
-
-    radial_frequency = np.arange(max_radius + 1, dtype=np.float64)
-
-    return radial_frequency, radial_power
+    return annular_mean(radius), annular_mean(power), annular_mean(np.sqrt(power))
 
 
 def _spectral_centroid_and_variance(grayscale: np.ndarray) -> Tuple[float, float]:
@@ -111,10 +104,10 @@ def _spectral_centroid_and_variance(grayscale: np.ndarray) -> Tuple[float, float
     return float(centroid), float(1.0 - resultant)
 
 
-def _dimensionality(power: np.ndarray) -> float:
+def _dimensionality(radial_magnitude: np.ndarray) -> float:
     """Slope of log magnitude versus log rank of the radially averaged spectrum."""
     # Skip the DC bin; rank all remaining components by magnitude.
-    magnitude = np.sqrt(power[1:])
+    magnitude = radial_magnitude[1:]
     magnitude = magnitude[magnitude > 0]
     if magnitude.size < 2:
         raise ValueError("At least two non-zero Fourier components are required.")
@@ -172,14 +165,15 @@ def spatial_frequency_features(
     max_frequency : float, default=256.0
         Highest radial spatial frequency to analyze, in cycles/image.
     log_bins : int, default=17
-        Number of log-spaced frequency bins used before fitting.
+        Number of log-spaced frequency bins used before fitting. Redies et
+        al. [2]_ used 17 bins (Figure 3a).
     pad : bool, default=True
         Whether to pad non-square images to a square with the mean gray value
-        before resizing. If False, the image is resized directly to
-        ``size`` x ``size``, which distorts the aspect ratio of non-square
-        images.
+        before resizing, as in Redies et al. [1]_. If False, the image is
+        resized directly to ``size`` x ``size``, as in the original method
+        [2]_, which distorts the aspect ratio of non-square images.
     return_spectrum : bool, default=False
-        If True, also return the radially averaged log-log power spectrum
+        If True, also return the radially averaged power spectrum
         (see Returns).
 
     Returns
@@ -196,9 +190,9 @@ def spatial_frequency_features(
            * - ``fourier_slope``
              - Slope of log power versus log frequency (about -2 for natural
                scenes and many artworks).
-           * - ``fourier_sigma``
-             - Mean squared residual of the binned data around the fitted
-               line.
+           * - ``fourier_deviation``
+             - Mean squared residual (log10 units) of the binned data around
+               the fitted line.
            * - ``dimensionality``
              - Slope of log magnitude versus log rank of the ranked spectrum
                (see Notes).
@@ -216,12 +210,12 @@ def spatial_frequency_features(
 
         - axis 0: radial frequency bin, in ascending order (one bin per
           cycle/image);
-        - axis 1: column 0 = log10 of the mean radial frequency in the bin
-          (cycles/image), column 1 = log10 of the mean power in the bin
+        - axis 1: column 0 = mean radial frequency of the Fourier components
+          in the bin (cycles/image), column 1 = mean power in the bin
           (squared amplitude, arbitrary units).
 
-        For amplitude instead of power, use ``spectrum[:, 1] / 2`` (log10 of
-        amplitude is half of log10 of power).
+        Both columns are linear (not log-transformed). For amplitude instead
+        of power, use ``np.sqrt(spectrum[:, 1])``.
 
     Notes
     -----
@@ -229,17 +223,19 @@ def spatial_frequency_features(
 
     1. Convert image to grayscale, optionally (``pad``) pad to a square with the
        mean gray value, and resize to a ``size`` x ``size`` square
-       by bicubic interpolation [1]_.
-    2. Compute the 2D power spectrum and average it in annular bins of
-       1 cycle/image.
-    3. ``fourier_slope`` and ``fourier_sigma``: keep bins between
+       by bicubic interpolation [1,2]_.
+    2. Compute the 2D Fourier transform and average it in annular bins of
+       1 cycle/image up to the Nyquist frequency, giving the mean radial
+       frequency, mean power and mean magnitude of each annulus.
+    3. ``fourier_slope`` and ``fourier_deviation``: keep bins between
        ``min_frequency`` and ``max_frequency``, average log power and log
        frequency within ``log_bins`` log-spaced bins, and fit a least-squares
        line. The slope is ``fourier_slope``; the mean squared residual is
-       ``fourier_sigma`` [2]_.
-    4. ``dimensionality``: using all bins except DC (no frequency
-       restriction), rank the magnitudes (square root of power) from largest
-       to smallest and fit a line to log magnitude versus log rank [3]_.
+       ``fourier_deviation`` [2]_.
+    4. ``dimensionality``: using the radially averaged magnitude of all bins
+       except DC (no frequency restriction), rank the components from
+       largest to smallest and fit a line to log magnitude versus log rank
+       [3]_.
     5. ``spectral_centroid``: using the full 2D power spectrum without DC,
        the mean radial frequency weighted by power (center of mass).
     6. ``spectral_variance``: circular variance, ``1 - R``, of the spectral
@@ -251,7 +247,7 @@ def spatial_frequency_features(
     .. [1] Redies, C., Grebenkina, M., Mohseni, M., Kaduhm, A., & Dobel, C. (2020).
        Global Image Properties Predict Ratings of Affective Pictures. Frontiers in Psychology, 11.
        https://doi.org/10.3389/fpsyg.2020.00953
-    .. [2] Redies, C., Hasenstein, J., & Denzler, J. (2008).
+    .. [2] Redies, C., Hasenstein, J., & Denzler, J. (2007).
        Fractal-like image statistics in visual art: Similarity to natural scenes. Spatial Vision, 21(1–2), 137–148.
        https://doi.org/10.1163/156856807782753921
     .. [3] Uran, C., Peter, A., Lazar, A., Barnes, W., Klon-Lipok, J., Shapcott, K. A., Roese, R.,
@@ -259,9 +255,26 @@ def spatial_frequency_features(
        Predictive coding of natural images by V1 firing rates and rhythmic synchronization. Neuron, 110(7),
        1240-1257.e8. https://doi.org/10.1016/j.neuron.2022.01.002
     """
+    # Validate input parameters
+    if size < 2:
+        raise ValueError("size must be at least 2.")
+    if min_frequency <= 0:
+        raise ValueError("min_frequency must be positive.")
+    if max_frequency <= min_frequency:
+        raise ValueError("max_frequency must exceed min_frequency.")
+    if log_bins < 2:
+        raise ValueError("log_bins must be at least 2.")
+    if max_frequency > size / 2:
+        raise ValueError(
+            f"max_frequency must not exceed Nyquist frequency (size / 2 = {size / 2})."
+        )
+
+    # Preprocess the image
     grayscale = _pad_and_resize_image(image, size=size, pad=pad)
-    frequency, power = _radially_averaged_power_spectrum(grayscale)
-    dimensionality = _dimensionality(power)
+    grayscale -= grayscale.mean()
+
+    frequency, power, magnitude = _radially_averaged_spectrum(grayscale)
+    dimensionality = _dimensionality(magnitude)
     centroid, variance = _spectral_centroid_and_variance(grayscale)
     # Exclude DC (0 cycles/image) and restrict to the published fit range.
     valid = (
@@ -311,17 +324,15 @@ def spatial_frequency_features(
     # y = intercept + slope * x
     slope, intercept = np.polyfit(x, y, deg=1)
     fitted_y = intercept + slope * x
-
-    # Redies et al. (2007): sum of squared deviations / number of points.
-    fourier_sigma = np.mean((y - fitted_y) ** 2)
+    deviation = np.mean((y - fitted_y) ** 2)
 
     features = {
         "fourier_slope": float(slope),
-        "fourier_sigma": float(fourier_sigma),
+        "fourier_deviation": float(deviation),
         "dimensionality": dimensionality,
         "spectral_centroid": centroid,
         "spectral_variance": variance,
     }
     if return_spectrum:
-        return features, np.column_stack([log_frequency, log_power])
+        return features, np.column_stack([frequency, power])
     return features

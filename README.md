@@ -62,7 +62,7 @@ features = hsv_features(image)
 Spatial frequency features capture the distribution of different spatial frequencies in an image, which relate to the level of detail and texture. The `spatial_frequency_features` function extracts these features:
 
 - `fourier_slope`
-- `fourier_sigma`
+- `fourier_deviation`
 - `dimensionality`
 - `spectral_centroid`
 - `spectral_variance`
