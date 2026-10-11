@@ -14,6 +14,7 @@ dependencies = ["scikit-image"]
 [project.optional-dependencies]
 resmem = ["resmem"]
 dev = ["resmem", "pytest", "pre-commit"]
+docs = ["sphinx", "pydata-sphinx-theme", "numpydoc", "myst-parser"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

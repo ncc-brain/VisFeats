@@ -6,7 +6,7 @@ from scipy.stats import circmean, entropy
 HSV_RANGE = (0.0, 1.0)
 
 
-def hsv_features(image: Image.Image, bins: int = 100) -> dict:
+def hsv_features(image: Image.Image, bins: int = 100) -> dict[str, float]:
     """Compute the mean and entropy of the HSV channels of an image.
 
     Parameters
@@ -21,21 +21,29 @@ def hsv_features(image: Image.Image, bins: int = 100) -> dict:
     dict of {str: float}
         A mapping of feature names to values:
 
-        ==================  ======================================
-        Key                 Description
-        ==================  ======================================
-        hue_mean            Circular mean hue in [0, 1).
-        saturation_mean     Mean saturation in [0, 1].
-        value_mean          Mean value (brightness) in [0, 1].
-        hue_entropy         Entropy of the hue histogram.
-        saturation_entropy  Entropy of the saturation histogram.
-        value_entropy       Entropy of the value histogram.
-        ==================  ======================================
+        .. list-table::
+           :header-rows: 1
+           :widths: 30 70
+
+           * - Key
+             - Description
+           * - ``hue_mean``
+             - Circular mean hue in [0, 1).
+           * - ``saturation_mean``
+             - Mean saturation in [0, 1].
+           * - ``value_mean``
+             - Mean value (brightness) in [0, 1].
+           * - ``hue_entropy``
+             - Entropy of the hue histogram.
+           * - ``saturation_entropy``
+             - Entropy of the saturation histogram.
+           * - ``value_entropy``
+             - Entropy of the value histogram.
 
     Notes
     -----
     The image is converted to RGB, then to HSV using
-    ``skimage.color.rgb2hsv``. The mean and histogram entropy are computed
+    :func:`skimage.color.rgb2hsv`. The mean and histogram entropy are computed
     for each channel.
     """
     rgb = image.convert("RGB")

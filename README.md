@@ -38,7 +38,6 @@ dictionary.
 
 ```python
 from visfeats import extract_all_features
-
 features = extract_all_features(image, features=["rms", "hsv_features"])
 ```
 

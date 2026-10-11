@@ -132,10 +132,7 @@ def spatial_frequency_features(
     pad: bool = True,
 ) -> Dict[str, float]:
     """
-    Calculate Fourier slope, Fourier sigma, dimensionality, spectral centroid,
-    and spectral variance of an image.
-
-    All are derived from the Fourier power spectrum of the grayscale image.
+    Calculate features related to the spatial frequency content of an image.
 
     Parameters
     ----------
@@ -144,11 +141,11 @@ def spatial_frequency_features(
     size : int, default=1024
         Square analysis resolution.
     min_frequency : float, default=10.0
-        Lowest fitted radial spatial frequency, in cycles/image.
+        Lowest radial spatial frequency to analyze, in cycles/image.
     max_frequency : float, default=256.0
-        Highest fitted radial spatial frequency, in cycles/image.
+        Highest radial spatial frequency to analyze, in cycles/image.
     log_bins : int, default=17
-        Number of log-spaced frequency bins used before fitting [2]_.
+        Number of log-spaced frequency bins used before fitting.
     pad : bool, default=True
         Whether to pad non-square images to a square with the mean gray value
         before resizing. If False, the image is resized directly to
@@ -157,27 +154,37 @@ def spatial_frequency_features(
 
     Returns
     -------
-    dict
-        ====================  ==============================================
-        Key                   Description
-        ====================  ==============================================
-        ``fourier_slope``     Slope of log power versus log frequency
-                              (about -2 for natural scenes and many
-                              artworks).
-        ``fourier_sigma``     Mean squared residual of the binned data
-                              around the fitted line.
-        ``dimensionality``    Slope of log magnitude versus log rank of the
-                              ranked spectrum (see Notes).
-        ``spectral_centroid`` Power-weighted mean spatial frequency, in
-                              cycles/image.
-        ``spectral_variance`` Circular variance of the power spectrum over
-                              orientation, in [0, 1] (see Notes).
-        ====================  ==============================================
+    dict of {str: float}
+        A mapping of feature names to values:
+
+        .. list-table::
+           :header-rows: 1
+           :widths: 30 70
+
+           * - Key
+             - Description
+           * - ``fourier_slope``
+             - Slope of log power versus log frequency (about -2 for natural
+               scenes and many artworks).
+           * - ``fourier_sigma``
+             - Mean squared residual of the binned data around the fitted
+               line.
+           * - ``dimensionality``
+             - Slope of log magnitude versus log rank of the ranked spectrum
+               (see Notes).
+           * - ``spectral_centroid``
+             - Power-weighted mean spatial frequency, in cycles/image.
+           * - ``spectral_variance``
+             - Circular variance of the power spectrum over orientation, in
+               [0, 1] (see Notes).
 
     Notes
     -----
-    1. Convert to grayscale, optionally (``pad``) pad to a square with the
-       mean gray value, and resize to ``size`` by bicubic interpolation [1]_.
+    The function follows these steps:
+
+    1. Convert image to grayscale, optionally (``pad``) pad to a square with the
+       mean gray value, and resize to a ``size`` x ``size`` square
+       by bicubic interpolation [1]_.
     2. Compute the 2D power spectrum and average it in annular bins of
        1 cycle/image.
     3. ``fourier_slope`` and ``fourier_sigma``: keep bins between

@@ -42,7 +42,7 @@ def extract_all_features(
         ``"all"`` selects every package-level feature. A feature name or
         sequence of feature names selects only those features. Available
         names are ``"hsv_features"``, ``"spatial_frequency_features"``,
-                ``"rms"``, and ``"memorability_resmem"``.
+        ``"rms"``, and ``"memorability_resmem"``.
 
     Returns
     -------

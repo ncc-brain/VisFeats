@@ -70,6 +70,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/generated/
 
 # PyBuilder
 .pybuilder/
@@ -185,3 +186,6 @@ AGENTS.md
 
 # VS Code settings and workspace files
 /.vscode
+
+# UV lock file
+uv.lock
