@@ -9,3 +9,4 @@ API reference
    visfeats.spatial_frequency_features
    visfeats.memorability_resmem
    visfeats.rms
+   visfeats.compressibility_pillow

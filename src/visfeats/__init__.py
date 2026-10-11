@@ -6,6 +6,7 @@ from typing import Dict, Union
 from PIL import Image
 
 from .chromatic import hsv_features
+from .compressibility import compressibility_pillow
 from .spatial_frequency import spatial_frequency_features
 from .memorability import memorability_resmem
 from .misc import rms
@@ -16,6 +17,7 @@ _FEATURES = {
     "hsv_features": hsv_features,
     "spatial_frequency_features": spatial_frequency_features,
     "rms": rms,
+    "compressibility_pillow": compressibility_pillow,
     "memorability_resmem": memorability_resmem,
 }
 
@@ -24,6 +26,7 @@ __all__ = [
     "spatial_frequency_features",
     "hsv_features",
     "rms",
+    "compressibility_pillow",
     "memorability_resmem",
 ]
 
@@ -42,7 +45,8 @@ def extract_all_features(
         ``"all"`` selects every package-level feature. A feature name or
         sequence of feature names selects only those features. Available
         names are ``"hsv_features"``, ``"spatial_frequency_features"``,
-        ``"rms"``, and ``"memorability_resmem"``.
+        ``"rms"``, ``"compressibility_pillow"``, and
+        ``"memorability_resmem"``.
 
     Returns
     -------

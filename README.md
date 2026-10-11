@@ -105,3 +105,12 @@ The `rms` function computes the root-mean-square contrast as the population stan
 from visfeats import rms
 rms_contrast = rms(image)
 ```
+
+#### Compressibility
+
+The `compressibility_pillow` function estimates how compressible an image is as the negative encoded size in bits per pixel, using lossless PNG encoding in memory by default. Values closer to 0 indicate a more compressible image.
+
+```python
+from visfeats import compressibility_pillow
+compressibility = compressibility_pillow(image)
+```
