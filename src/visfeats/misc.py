@@ -11,7 +11,7 @@ def rms(image: Image.Image) -> float:
 
     Parameters
     ----------
-    image : PIL.Image.Image
+    image : Image
         Input image in any Pillow mode; converted to grayscale internally.
 
     Returns

@@ -16,6 +16,12 @@ resmem = ["resmem"]
 dev = ["resmem", "pytest", "pre-commit"]
 docs = ["sphinx", "pydata-sphinx-theme", "numpydoc", "myst-parser"]
 
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:The parameter 'pretrained' is deprecated:UserWarning:torchvision",
+    "ignore:Arguments other than a weight enum:UserWarning:torchvision",
+]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

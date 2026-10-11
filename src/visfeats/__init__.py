@@ -36,7 +36,7 @@ def extract_all_features(
 
     Parameters
     ----------
-    image : PIL.Image.Image
+    image : Image
         Input image in any Pillow mode.
     features : str or sequence of str, default="all"
         ``"all"`` selects every package-level feature. A feature name or

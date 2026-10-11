@@ -1,16 +1,30 @@
 import math
 
+import numpy as np
 import pytest
 
 from visfeats.spatial_frequency import spatial_frequency_features
 
 
-@pytest.mark.parametrize("pad", [True, False])
-def test_spatial_frequency_features_on_scikit_images(skimage_images, pad):
+@pytest.mark.parametrize(
+    "return_spectrum,pad,size",
+    [(r, p, s) for r in (False, True) for p in (True, False) for s in (256, 512, 1024)],
+)
+def test_spatial_frequency_features_on_scikit_images(
+    skimage_images, pad, size, return_spectrum
+):
     for image in skimage_images:
-        features = spatial_frequency_features(
-            image, size=256, max_frequency=64.0, pad=pad
-        )
+        kwargs = {"size": size, "max_frequency": 64.0, "pad": pad}
+        if return_spectrum:
+            features, spectrum = spatial_frequency_features(
+                image, return_spectrum=True, **kwargs
+            )
+            assert spectrum.ndim == 2
+            assert spectrum.shape[1] == 2  # (log10 frequency, log10 power)
+            assert np.isfinite(spectrum).all()
+            assert np.all(np.diff(spectrum[:, 0]) > 0)
+        else:
+            features = spatial_frequency_features(image, **kwargs)
 
         assert set(features) == {
             "fourier_slope",

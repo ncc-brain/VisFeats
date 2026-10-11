@@ -25,12 +25,15 @@ def memorability_resmem(image: Image.Image) -> float:
     The image is converted to RGB, preprocessed with the ResMem transformer
     (resized to 227 x 227 and normalized), and passed through the pretrained
     ResMem network, a residual neural network trained to predict human
-    memorability scores (Needell and Bainbridge, 2022). The model is loaded
+    memorability scores [1]_. The model is loaded
     once per process and reused across calls.
+
+    This feature requires the optional ``resmem`` package, which is not
+    installed by default (``pip install resmem``).
 
     Parameters
     ----------
-    image : PIL.Image.Image
+    image : Image
         Input image in any Pillow mode; converted to RGB internally.
 
     Returns
@@ -38,6 +41,11 @@ def memorability_resmem(image: Image.Image) -> float:
     float
         Predicted memorability score in [0, 1]; higher values indicate a
         more memorable image.
+
+    Raises
+    ------
+    ImportError
+        If ``resmem`` package is not installed.
 
     References
     ----------

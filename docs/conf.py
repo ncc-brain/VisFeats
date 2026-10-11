@@ -15,6 +15,12 @@ extensions = [
 ]
 autosummary_generate = True
 numpydoc_show_class_members = False
+numpydoc_xref_param_type = True
+numpydoc_xref_aliases = {
+    "Image": "PIL.Image.Image",
+    "ndarray": "numpy.ndarray",
+}
+numpydoc_xref_ignore = {"optional", "default", "of", "or", "shape"}
 # resmem pulls in PyTorch; it is not needed to build the docs
 autodoc_mock_imports = ["resmem"]
 

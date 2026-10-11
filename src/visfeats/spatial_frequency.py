@@ -1,6 +1,7 @@
-from typing import Dict, Tuple
+from typing import Dict, Literal, Tuple, overload
 
 import numpy as np
+from numpy.typing import NDArray
 from PIL import Image
 from scipy import fft
 
@@ -123,6 +124,31 @@ def _dimensionality(power: np.ndarray) -> float:
     return float(np.polyfit(np.log10(ranks), np.log10(ranked), deg=1)[0])
 
 
+@overload
+def spatial_frequency_features(
+    image: Image.Image,
+    size: int = ...,
+    min_frequency: float = ...,
+    max_frequency: float = ...,
+    log_bins: int = ...,
+    pad: bool = ...,
+    return_spectrum: Literal[False] = ...,
+) -> Dict[str, float]: ...
+
+
+@overload
+def spatial_frequency_features(
+    image: Image.Image,
+    size: int = ...,
+    min_frequency: float = ...,
+    max_frequency: float = ...,
+    log_bins: int = ...,
+    pad: bool = ...,
+    *,
+    return_spectrum: Literal[True],
+) -> Tuple[Dict[str, float], NDArray[np.float64]]: ...
+
+
 def spatial_frequency_features(
     image: Image.Image,
     size: int = 1024,
@@ -130,13 +156,14 @@ def spatial_frequency_features(
     max_frequency: float = 256.0,
     log_bins: int = 17,
     pad: bool = True,
-) -> Dict[str, float]:
+    return_spectrum: bool = False,
+) -> Dict[str, float] | Tuple[Dict[str, float], NDArray[np.float64]]:
     """
     Calculate features related to the spatial frequency content of an image.
 
     Parameters
     ----------
-    image : PIL.Image.Image
+    image : Image
         Input image.
     size : int, default=1024
         Square analysis resolution.
@@ -151,10 +178,13 @@ def spatial_frequency_features(
         before resizing. If False, the image is resized directly to
         ``size`` x ``size``, which distorts the aspect ratio of non-square
         images.
+    return_spectrum : bool, default=False
+        If True, also return the radially averaged log-log power spectrum
+        (see Returns).
 
     Returns
     -------
-    dict of {str: float}
+    features : dict of {str: float}
         A mapping of feature names to values:
 
         .. list-table::
@@ -177,6 +207,21 @@ def spatial_frequency_features(
            * - ``spectral_variance``
              - Circular variance of the power spectrum over orientation, in
                [0, 1] (see Notes).
+
+    spectrum : ndarray, shape (n_frequencies, 2)
+        Only returned when ``return_spectrum=True``, as the second element of
+        a ``(features, spectrum)`` tuple. This is the radially averaged
+        spectrum before log-binning, restricted to frequencies between
+        ``min_frequency`` and ``max_frequency`` with non-zero power. Axes are:
+
+        - axis 0: radial frequency bin, in ascending order (one bin per
+          cycle/image);
+        - axis 1: column 0 = log10 of the mean radial frequency in the bin
+          (cycles/image), column 1 = log10 of the mean power in the bin
+          (squared amplitude, arbitrary units).
+
+        For amplitude instead of power, use ``spectrum[:, 1] / 2`` (log10 of
+        amplitude is half of log10 of power).
 
     Notes
     -----
@@ -270,10 +315,13 @@ def spatial_frequency_features(
     # Redies et al. (2007): sum of squared deviations / number of points.
     fourier_sigma = np.mean((y - fitted_y) ** 2)
 
-    return {
+    features = {
         "fourier_slope": float(slope),
         "fourier_sigma": float(fourier_sigma),
         "dimensionality": dimensionality,
         "spectral_centroid": centroid,
         "spectral_variance": variance,
     }
+    if return_spectrum:
+        return features, np.column_stack([log_frequency, log_power])
+    return features
